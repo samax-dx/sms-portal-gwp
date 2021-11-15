@@ -4,6 +4,9 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Flurl.Http;
+using TelcobrightUtil;
+using SmsGateway;
+
 
 namespace sms_portal_gwp
 {
@@ -15,13 +18,13 @@ namespace sms_portal_gwp
                 async payloadRaw =>
                 {
                     var endpoint = "/SendSMS";
-                    var payload = JsonConvert.DeserializeObject<IDictionary<string, object>>(QString.Base64Decode(payloadRaw));
+                    IDictionary<string, object> payload = JsonConvert.DeserializeObject<IDictionary<string, object>>(QString.Base64Decode(payloadRaw));
 
                     payload.Add("ApiKey", ConfigSGW.apiKey);
                     payload.Add("ClientId", ConfigSGW.clientId);
 
-                    var response = await $"{ConfigSGW.baseUrl}{endpoint}".PostJsonAsync(payload);
-                    var resultRaw = await response.GetJsonAsync<object>();
+                    IFlurlResponse response = await $"{ConfigSGW.baseUrl}{endpoint}".PostJsonAsync(payload);
+                    object resultRaw = await response.GetJsonAsync<object>();
 
                     return QString.Base64Encode(resultRaw.ToString());
                 }
@@ -36,7 +39,27 @@ namespace sms_portal_gwp
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0018:Inline variable declaration", Justification = "<Pending>")]
         static async Task Main(string[] args)
         {
-            var action = args.ElementAtOrDefault(0);
+            EndPoint endPoint = new EndPoint(new HttpConfig()
+            {
+                BaseUrl = ConfigSGW.baseUrl,
+                UrlSuffix = "/SendSMS",
+                ApiKey = ConfigSGW.apiKey,
+                ClientId = ConfigSGW.clientId
+            });
+
+            ISmsProvider smsProvider = new SmsProviderHttp(endPoint);
+
+            var result = await smsProvider.SendSms(new SmsTask()
+            {
+                CampaignName = "test",
+                SenderId = "8809638010035",
+                MobileNumbers = "8801717590703,8801754105098",
+                Message = "From latest sms-portal-gwp",
+            });
+
+            Console.WriteLine(result);
+
+            /*var action = args.ElementAtOrDefault(0);
             var payload = args.ElementAtOrDefault(1);
 
             if (action == null)
@@ -49,9 +72,9 @@ namespace sms_portal_gwp
             actions.TryGetValue(action, out eval);
 
             if (eval == null) Environment.Exit(1);
-            
+
             var result = await eval(payload);
-            Console.WriteLine(result);
+            Console.WriteLine(result);*/
         }
     }
 }
