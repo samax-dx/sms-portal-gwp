@@ -14,8 +14,8 @@ namespace SmsGateway
         string UrlSuffix { get; set; }
         string ApiKey { get; set; }
         string ClientId { get; set; }
-        Task<object> Post(object payload);
-        Task<object> Get(object payload);
+        Task<object> Post(object requestBody);
+        Task<object> Get(object requestBody);
     }
     public interface IHttpConfig
     {
@@ -53,18 +53,18 @@ namespace SmsGateway
         {
             return new Dictionary<string, object>(RequestBody);
         }
-        public abstract Task<object> Post(object payload);
-        public abstract Task<object> Get(object payload);
+        public abstract Task<object> Post(object requestBody);
+        public abstract Task<object> Get(object requestBody);
     }
     public class EndPoint : BaseEndPoint
     {
         public EndPoint(IHttpConfig config) : base(config) { }
-        public override async Task<object> Post(object payload)
+        public override async Task<object> Post(object requestBody)
         {
-            var response = await FullUrl.PostJsonAsync(payload);
+            var response = await FullUrl.PostJsonAsync(requestBody);
             return response.GetJsonAsync<object>();
         }
-        public override Task<object> Get(object payload)
+        public override Task<object> Get(object requestBody)
         {
             throw new NotImplementedException();
         }
